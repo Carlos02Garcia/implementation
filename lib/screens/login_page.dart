@@ -33,8 +33,6 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(36),
-                    border: Border.all(color: Colors.blue, width: 3),
                   ),
                   child: Image.asset(
                     'assets/images/logo.png',
@@ -48,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 // Welcome pill
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   decoration: BoxDecoration(
                     color: red,
                     borderRadius: BorderRadius.circular(30),
@@ -60,12 +58,12 @@ class _LoginPageState extends State<LoginPage> {
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+                      letterSpacing: 0.1,
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 18),
 
                 // Username
                 TextField(
@@ -144,19 +142,9 @@ class _LoginPageState extends State<LoginPage> {
                     );
                   },
                   child: const Text(
-                    '¿No tienes cuenta? Regístrate',
-                    style: TextStyle(color: Colors.black87),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-                // small indicator bar
-                Container(
-                  width: 64,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(4),
+                    'No tienes una cuenta? Regístrate ',
+                    style: TextStyle(color: Colors.black87,
+                    fontSize: 18,),
                   ),
                 ),
               ],
