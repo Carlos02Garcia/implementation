@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -11,6 +12,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -100,23 +102,45 @@ class _RegisterPageState extends State<RegisterPage> {
                       backgroundColor: red,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(36)),
                     ),
-                    onPressed: () {
-                      final u = _usernameController.text.trim();
-                      final p = _passwordController.text;
-                      final c = _confirmController.text;
-                      if (u.isEmpty || p.isEmpty || c.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rellena todos los campos')));
-                        return;
-                      }
-                      if (p != c) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Las contraseñas no coinciden')));
-                        return;
-                      }
-                      // Placeholder: aquí harías la llamada al backend para crear usuario
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registrado: $u')));
-                      Navigator.pop(context);
-                    },
-                    child: const Text('REGISTRARSE', style: TextStyle(color: Colors.white, fontSize: 18)),
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            setState(() => _isLoading = true);
+                            final u = _usernameController.text.trim();
+                            final p = _passwordController.text;
+                            final c = _confirmController.text;
+                            if (u.isEmpty || p.isEmpty || c.isEmpty) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rellena todos los campos')));
+                              setState(() => _isLoading = false);
+                              return;
+                            }
+                            if (p != c) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Las contraseñas no coinciden')));
+                              setState(() => _isLoading = false);
+                              return;
+                            }
+                            final service = AuthService(baseUrl: 'http://10.0.2.2:8000');
+                            try {
+                              final resp = await service.register(u, p).timeout(const Duration(seconds: 10));
+                              if (!mounted) return;
+                              if (resp.statusCode == 200 || resp.statusCode == 201) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registrado: $u')));
+                                Navigator.pop(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${resp.statusCode} - ${resp.body}')));
+                              }
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error de red: $e')));
+                            } finally {
+                              if (mounted) setState(() => _isLoading = false);
+                            }
+                          },
+                    child: _isLoading
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text('REGISTRARSE', style: TextStyle(color: Colors.white, fontSize: 18)),
                   ),
                 ),
               ],
