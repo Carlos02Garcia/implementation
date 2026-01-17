@@ -1,4 +1,4 @@
-# Copilot Instructions for implementation
+<!-- # Copilot Instructions for implementation
 
 ## Project Overview
 This is a Flutter application named "implementation", starting as a basic counter app. It demonstrates core Flutter concepts like stateful widgets and hot reload.
@@ -24,4 +24,4 @@ This is a Flutter application named "implementation", starting as a basic counte
 - [pubspec.yaml](pubspec.yaml): Dependencies and version.
 - [android/build.gradle.kts](android/build.gradle.kts): Custom build dir setup.
 - [lib/main.dart](lib/main.dart): Core app logic.
-- [test/widget_test.dart](test/widget_test.dart): Widget testing example.
+- [test/widget_test.dart](test/widget_test.dart): Widget testing example. -->

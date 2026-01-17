@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'register_page.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,6 +12,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -112,22 +114,37 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       elevation: 2,
                     ),
-                    onPressed: () {
-                      final username = _usernameController.text;
-                      // final password = _passwordController.text; // currently unused
-                      // Placeholder action: aquí conectarías con backend
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Usuario: $username')),
-                      );
+                    onPressed: _isLoading ? null : () async {
+                      setState(() => _isLoading = true);
+                      final username = _usernameController.text.trim();
+                      final password = _passwordController.text;
+                      final service = AuthService(baseUrl: 'http://10.0.2.2:8000');
+                      try {
+                        final resp = await service.login(username, password).timeout(const Duration(seconds: 10));
+                        if (!mounted) return;
+                        if (resp.statusCode == 200) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login correcto')));
+                        } else {
+                          final body = resp.body;
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${resp.statusCode} - $body')));
+                        }
+                      } catch (e) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error de red: $e')));
+                      } finally {
+                        if (mounted) setState(() => _isLoading = false);
+                      }
                     },
-                    child: const Text(
-                      'LOGIN',
-                      style: TextStyle(
-                        fontSize: 24,
-                        letterSpacing: 2,
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text(
+                            'LOGIN',
+                            style: TextStyle(
+                              fontSize: 24,
+                              letterSpacing: 2,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
 
