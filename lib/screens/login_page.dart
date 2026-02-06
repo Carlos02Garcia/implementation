@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'register_page.dart';
-import '../services/auth_service.dart';
+import 'package:implementation/auth_service.dart';
+import 'verification_code.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,7 +11,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
@@ -25,7 +26,10 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 32.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -33,9 +37,7 @@ class _LoginPageState extends State<LoginPage> {
                 // Logo inside rounded rect with blue border
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                  ),
+                  decoration: BoxDecoration(color: Colors.transparent),
                   child: Image.asset(
                     'assets/images/logo.png',
                     width: 240,
@@ -48,7 +50,10 @@ class _LoginPageState extends State<LoginPage> {
 
                 // Welcome pill
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: red,
                     borderRadius: BorderRadius.circular(30),
@@ -69,12 +74,16 @@ class _LoginPageState extends State<LoginPage> {
 
                 // Username
                 TextField(
-                  controller: _usernameController,
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    hintText: 'Nombre',
+                    hintText: 'Correo electrónico',
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -92,7 +101,10 @@ class _LoginPageState extends State<LoginPage> {
                     hintText: 'Contraseña',
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -114,29 +126,65 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       elevation: 2,
                     ),
-                    onPressed: _isLoading ? null : () async {
-                      setState(() => _isLoading = true);
-                      final username = _usernameController.text.trim();
-                      final password = _passwordController.text;
-                      final service = AuthService(baseUrl: 'http://10.0.2.2:8000');
-                      try {
-                        final resp = await service.login(username, password).timeout(const Duration(seconds: 10));
-                        if (!mounted) return;
-                        if (resp.statusCode == 200) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login correcto')));
-                        } else {
-                          final body = resp.body;
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${resp.statusCode} - $body')));
-                        }
-                      } catch (e) {
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error de red: $e')));
-                      } finally {
-                        if (mounted) setState(() => _isLoading = false);
-                      }
-                    },
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            setState(() => _isLoading = true);
+                            final email = _emailController.text.trim();
+                            final password = _passwordController.text;
+                            final service = AuthService(
+                              baseUrl: 'http://10.0.2.2:8000',
+                            );
+                            // Captura objetos que dependen de context antes del await
+                            final messenger = ScaffoldMessenger.of(context);
+                            final navigator = Navigator.of(context);
+                            try {
+                              final resp = await service.loginStep1(
+                                email,
+                                password,
+                              )
+                              .timeout(const Duration(seconds: 10));
+                              if (!mounted) return;
+                              if (resp.statusCode == 200) {
+                                messenger.showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Login correcto'),
+                                  ),
+                                );
+                                navigator.pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const VerificationPage(),
+                                  ),
+                                );
+                              } else {
+                                final body = resp.body;
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Error: ${resp.statusCode} - $body',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (!mounted) return;
+                              messenger.showSnackBar(
+                                SnackBar(content: Text('Error de red: $e')),
+                              );
+                            } finally {
+                              if (mounted) setState(() => _isLoading = false);
+                            }
+                          },
                     child: _isLoading
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
                         : const Text(
                             'LOGIN',
                             style: TextStyle(
@@ -155,13 +203,14 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const RegisterPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterPage(),
+                      ),
                     );
                   },
                   child: const Text(
                     'No tienes una cuenta? Regístrate ',
-                    style: TextStyle(color: Colors.black87,
-                    fontSize: 18,),
+                    style: TextStyle(color: Colors.black87, fontSize: 18),
                   ),
                 ),
               ],
@@ -174,7 +223,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }

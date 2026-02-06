@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import 'package:implementation/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -9,7 +9,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
   bool _isLoading = false;
@@ -51,9 +51,9 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 16),
                 TextField(
-                  controller: _usernameController,
+                  controller: _emailController,
                   decoration: InputDecoration(
-                    hintText: 'Nombre',
+                    hintText: 'Correo electronico',
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
@@ -102,38 +102,39 @@ class _RegisterPageState extends State<RegisterPage> {
                       backgroundColor: red,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(36)),
                     ),
-                    onPressed: _isLoading
+                                 onPressed: _isLoading
                         ? null
                         : () async {
                             setState(() => _isLoading = true);
-                            final u = _usernameController.text.trim();
+                            final email = _emailController.text.trim();
                             final p = _passwordController.text;
                             final c = _confirmController.text;
-                            if (u.isEmpty || p.isEmpty || c.isEmpty) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rellena todos los campos')));
+                                        // Captura objetos dependientes de context antes del await
+                                        final messenger = ScaffoldMessenger.of(context);
+                                        final navigator = Navigator.of(context);
+                            if (email.isEmpty || p.isEmpty || c.isEmpty) {
+                                          messenger.showSnackBar(const SnackBar(content: Text('Rellena todos los campos')));
                               setState(() => _isLoading = false);
                               return;
                             }
                             if (p != c) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Las contraseñas no coinciden')));
+                                          messenger.showSnackBar(const SnackBar(content: Text('Las contraseñas no coinciden')));
                               setState(() => _isLoading = false);
                               return;
                             }
                             final service = AuthService(baseUrl: 'http://10.0.2.2:8000');
                             try {
-                              final resp = await service.register(u, p).timeout(const Duration(seconds: 10));
+                              final resp = await service.register(email, p).timeout(const Duration(seconds: 10));
                               if (!mounted) return;
                               if (resp.statusCode == 200 || resp.statusCode == 201) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registrado: $u')));
-                                Navigator.pop(context);
+                                            messenger.showSnackBar(SnackBar(content: Text('Registrado: $email')));
+                                            navigator.pop();
                               } else {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${resp.statusCode} - ${resp.body}')));
+                                            messenger.showSnackBar(SnackBar(content: Text('Error: ${resp.statusCode} - ${resp.body}')));
                               }
                             } catch (e) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error de red: $e')));
+                                          if (!mounted) return;
+                                          messenger.showSnackBar(SnackBar(content: Text('Error de red: $e')));
                             } finally {
                               if (mounted) setState(() => _isLoading = false);
                             }
@@ -153,7 +154,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
