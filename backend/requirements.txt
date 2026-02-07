@@ -1,5 +1,6 @@
-fastapi==0.100.0
-uvicorn[standard]==0.23.1
-mysql-connector-python==8.1.0
-passlib[bcrypt]==1.8.1
-python-dotenv==1.0.0
+fastapi
+uvicorn[standard]
+mysql-connector-python
+passlib[bcrypt]
+python-dotenv
+python-jose[cryptography]
