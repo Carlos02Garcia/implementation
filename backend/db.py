@@ -1,9 +1,10 @@
 import os
+from pathlib import Path
 import mysql.connector
 from mysql.connector import pooling
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "127.0.0.1"),
