@@ -3,7 +3,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 
 from backend.db import get_user_by_email, create_user
-from models.schemas import RegisterRequest, LoginRequest, VerifyOtpRequest
+from models.schemas import RegisterRequest, LoginRequest, VerifyOtpRequest, ResendOtpRequest
 from services.otp_service import generate_otp, save_otp, validate_otp
 from services.email_service import send_otp_email
 import os
@@ -44,3 +44,19 @@ def verify_otp(payload: VerifyOtpRequest):
 
     token = create_access_token({"sub": payload.email})
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.post("/resend-otp")
+def resend_otp(payload: ResendOtpRequest):
+    user = get_user_by_email(payload.email)
+    if not user:
+        raise HTTPException(404, "Usuario no encontrado")
+
+    code = generate_otp()
+    save_otp(payload.email, code, datetime.now() + timedelta(minutes=5))
+
+    email_enabled = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
+    if email_enabled:
+        send_otp_email(payload.email, code)
+
+    return {"message": "OTP reenviado"}

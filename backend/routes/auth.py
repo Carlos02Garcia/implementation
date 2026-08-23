@@ -21,6 +21,10 @@ class VerifyOtpRequest(BaseModel):
     code: str
 
 
+class ResendOtpRequest(BaseModel):
+    email: EmailStr
+
+
 @router.post("/register")
 def register(payload: RegisterRequest):
     existing = db.get_user_by_email(payload.email)
@@ -50,6 +54,15 @@ def login_step1(payload: LoginStep1Request):
     # En un caso real, generar y enviar OTP (email/SMS) y persistirlo
     # Aquí simulamos que se envió correctamente
     return {"message": "OTP enviado"}
+
+
+@router.post("/resend-otp")
+def resend_otp(payload: ResendOtpRequest):
+    user = db.get_user_by_email(payload.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    # En un caso real, regenerar y enviar OTP y persistirlo
+    return {"message": "OTP reenviado"}
 
 
 @router.post("/verify-otp")

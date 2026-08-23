@@ -14,6 +14,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  static const String _baseUrl = 'http://10.0.2.2:8000';
 
   @override
   Widget build(BuildContext context) {
@@ -132,9 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                             setState(() => _isLoading = true);
                             final email = _emailController.text.trim();
                             final password = _passwordController.text;
-                            final service = AuthService(
-                              baseUrl: 'http://10.0.2.2:8000',
-                            );
+                            final service = AuthService(baseUrl: _baseUrl);
                             // Captura objetos que dependen de context antes del await
                             final messenger = ScaffoldMessenger.of(context);
                             final navigator = Navigator.of(context);
@@ -148,13 +147,15 @@ class _LoginPageState extends State<LoginPage> {
                               if (resp.statusCode == 200) {
                                 messenger.showSnackBar(
                                   const SnackBar(
-                                    content: Text('Login correcto'),
+                                    content: Text('Codigo OTP enivado a tu correo'),
                                   ),
                                 );
                                 navigator.pushReplacement(
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const VerificationPage(),
+                                    builder: (context) => VerificationPage(
+                                      email: email,
+                                      baseUrl: _baseUrl,
+                                    ),
                                   ),
                                 );
                               } else {

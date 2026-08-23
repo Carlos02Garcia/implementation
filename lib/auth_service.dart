@@ -28,5 +28,13 @@ class AuthService {
       body: jsonEncode({'email': email, 'code': code}),
     );
   }
+
+  Future<http.Response> resendOtp(String email) {
+    return http.post(
+      Uri.parse('$baseUrl/auth/resend-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+  }
 }
 

@@ -1,8 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:implementation/auth_service.dart';
+import 'vehicle_selection_page.dart';
 
 class VerificationPage extends StatefulWidget {
-  const VerificationPage({super.key});
+  const VerificationPage({
+    super.key,
+    required this.email,
+    required this.baseUrl,
+  });
+
+  final String email;
+  final String baseUrl;
 
   @override
   State<VerificationPage> createState() => _VerificationPageState();
@@ -12,18 +21,23 @@ class _VerificationPageState extends State<VerificationPage> {
   final List<TextEditingController> _controllers =
       List.generate(6, (_) => TextEditingController());
 
-  int _seconds = 115; // 1:55
+  int _seconds = 60; // 1:00
   Timer? _timer;
+  bool _isVerifying = false;
+  bool _isResending = false;
+
+  late final AuthService _authService;
 
   @override
   void initState() {
     super.initState();
+    _authService = AuthService(baseUrl: widget.baseUrl);
     _startTimer();
   }
 
   void _startTimer() {
     _timer?.cancel();
-    _seconds = 115;
+    _seconds = 60;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_seconds == 0) {
         timer.cancel();
@@ -37,6 +51,18 @@ class _VerificationPageState extends State<VerificationPage> {
     final m = _seconds ~/ 60;
     final s = _seconds % 60;
     return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  String get _maskedEmail {
+    final parts = widget.email.split('@');
+    if (parts.length != 2) return 'tu correo';
+    final local = parts[0];
+    final domain = parts[1];
+    if (local.isEmpty) return '***@$domain';
+    if (local.length == 1) return '$local***@$domain';
+    final first = local.substring(0, 1);
+    final last = local.substring(local.length - 1);
+    return '$first***$last@$domain';
   }
 
   @override
@@ -57,16 +83,12 @@ class _VerificationPageState extends State<VerificationPage> {
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'El codigo sera enviado a\n tu numero de telefono',
+              Text(
+                'Te enviamos el codigo a $_maskedEmail',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 12),
-              const Text(
-                '******3232',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
               const SizedBox(height: 30),
 
               // OTP boxes
@@ -83,15 +105,28 @@ class _VerificationPageState extends State<VerificationPage> {
                   Text('Resend OTP in $_timeFormatted'),
                   const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: _seconds == 0 ? _startTimer : null,
+                    onPressed: (_seconds == 0 && !_isResending)
+                        ? _resendCode
+                        : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: red,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: const Text('Resend OTP',
-                    style: TextStyle(fontSize: 18, color: Colors.white),),
+                    child: _isResending
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Resend OTP',
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
                   ),
                 ],
               ),
@@ -108,11 +143,20 @@ class _VerificationPageState extends State<VerificationPage> {
                       borderRadius: BorderRadius.circular(36),
                     ),
                   ),
-                  onPressed: _verifyCode,
-                  child: const Text(
-                    'Verify',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
+                  onPressed: _isVerifying ? null : _verifyCode,
+                  child: _isVerifying
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Verify',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
                 ),
               ),
             ],
@@ -148,9 +192,8 @@ class _VerificationPageState extends State<VerificationPage> {
     );
   }
 
-  void _verifyCode() {
-    final code =
-        _controllers.map((c) => c.text).join();
+  Future<void> _verifyCode() async {
+    final code = _controllers.map((c) => c.text).join();
 
     if (code.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,10 +202,72 @@ class _VerificationPageState extends State<VerificationPage> {
       return;
     }
 
-    // Aquí luego conectas con FastAPI
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Código ingresado: $code')),
-    );
+    setState(() => _isVerifying = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    try {
+      final resp = await _authService
+          .verifyOtp(widget.email, code)
+          .timeout(const Duration(seconds: 10));
+
+      if (!mounted) return;
+
+      if (resp.statusCode == 200) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('OTP verificado')),
+        );
+        navigator.pushReplacement(
+          MaterialPageRoute(builder: (_) => const VehicleSelectionPage()),
+        );
+      } else {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Error: ${resp.statusCode} - ${resp.body}'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Error de red: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isVerifying = false);
+    }
+  }
+
+  Future<void> _resendCode() async {
+    setState(() => _isResending = true);
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final resp = await _authService
+          .resendOtp(widget.email)
+          .timeout(const Duration(seconds: 10));
+
+      if (!mounted) return;
+
+      if (resp.statusCode == 200) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Nuevo código enviado')),
+        );
+        _startTimer();
+      } else {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Error: ${resp.statusCode} - ${resp.body}'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Error de red: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
   }
 
   @override
