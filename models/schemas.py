@@ -11,3 +11,7 @@ class LoginRequest(BaseModel):
 class VerifyOtpRequest(BaseModel):
     email: EmailStr
     code: str
+
+
+class ResendOtpRequest(BaseModel):
+    email: EmailStr
