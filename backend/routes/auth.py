@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from passlib.hash import bcrypt
-from .. import db
+import db
 
 router = APIRouter(tags=["auth"])
 
