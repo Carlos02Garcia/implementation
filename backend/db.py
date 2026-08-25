@@ -14,7 +14,7 @@ DB_CONFIG = {
     "port": int(os.getenv("DB_PORT", 3306)),  # 3306 es un valor seguro por defecto
 }
 
-pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=2, **DB_CONFIG)  # Reducido a 2
+pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=3, **DB_CONFIG)  # Reducido a 2
 
 def get_db():
     return pool.get_connection()
