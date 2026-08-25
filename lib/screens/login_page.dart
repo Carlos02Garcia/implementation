@@ -14,7 +14,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-  static const String _baseUrl = 'http://10.0.2.2:8000';
+  static const String _baseUrl = 'http://192.168.1.36:8000';
+  //static const String _baseUrl = 'http://10.0.2.2:8000';
 
   @override
   Widget build(BuildContext context) {
