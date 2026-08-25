@@ -1,6 +1,5 @@
 -- Schema para la base de datos 'miapp'
-CREATE DATABASE IF NOT EXISTS miapp;
-USE miapp;
+USE b88sz46vbki4xwgfjyv7;
 
 -- Tabla de usuarios
 CREATE TABLE IF NOT EXISTS users (
@@ -11,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Índice adicional sobre email (ya cubierto por UNIQUE, opcional)
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX idx_users_email ON users(email);
 
 -- Tabla de códigos OTP para verificación de login
 CREATE TABLE IF NOT EXISTS otp_codes (
