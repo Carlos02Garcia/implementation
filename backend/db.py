@@ -4,18 +4,21 @@ import mysql.connector
 from mysql.connector import pooling
 from dotenv import load_dotenv
 
-#load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+# Cargar .env solo si existe (para desarrollo local)
+env_path = Path(__file__).resolve().parent / ".env"
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
 
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PASSWORD"),
     "database": os.getenv("DB_NAME"),
-    "port": int(os.getenv("DB_PORT", 3306)),  # 3306 es un valor seguro por defecto
+    "port": int(os.getenv("DB_PORT", 3306)),
 }
 
-pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=2 **DB_CONFIG)  # Reducido a 2otenv(dotenv_path=Path(__file__).resolve().parent / ".env")
-
+# Creamos el pool con pool_size=2 para no exceder el límite de Clever Cloud
+pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=2, **DB_CONFIG)
 
 def get_db():
     return pool.get_connection()
