@@ -9,6 +9,12 @@ env_path = Path(__file__).resolve().parent / ".env"
 if env_path.exists():
     load_dotenv(dotenv_path=env_path)
 
+# Verificar que las variables necesarias estén presentes
+required_vars = ["DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME"]
+missing = [v for v in required_vars if not os.getenv(v)]
+if missing:
+    raise EnvironmentError(f"Faltan variables de entorno: {', '.join(missing)}")
+
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "user": os.getenv("DB_USER"),
@@ -17,7 +23,7 @@ DB_CONFIG = {
     "port": int(os.getenv("DB_PORT", 3306)),
 }
 
-# Creamos el pool con pool_size=2 para no exceder el límite de Clever Cloud
+# Pool de conexiones reducido a 1 para no exceder el límite de Clever Cloud
 pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=1, **DB_CONFIG)
 
 def get_db():
@@ -26,7 +32,7 @@ def get_db():
 def get_user_by_email(email: str):
     db = get_db()
     cur = db.cursor(dictionary=True)
-    cur.execute("SELECT * FROM users WHERE email=%s", (email,))
+    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
     user = cur.fetchone()
     cur.close()
     db.close()
@@ -36,7 +42,7 @@ def create_user(email: str, password_hash: str):
     db = get_db()
     cur = db.cursor()
     cur.execute(
-        "INSERT INTO users (email, password_hash) VALUES (%s,%s)",
+        "INSERT INTO users (email, password_hash) VALUES (%s, %s)",
         (email, password_hash),
     )
     db.commit()
