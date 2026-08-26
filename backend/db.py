@@ -4,7 +4,6 @@ import mysql.connector
 from mysql.connector import pooling
 from dotenv import load_dotenv
 
-<<<<<<< HEAD
 #load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 DB_CONFIG = {
@@ -15,20 +14,8 @@ DB_CONFIG = {
     "port": int(os.getenv("DB_PORT", 3306)),  # 3306 es un valor seguro por defecto
 }
 
-pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=2 **DB_CONFIG)  # Reducido a 2
-=======
-load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=2 **DB_CONFIG)  # Reducido a 2otenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "127.0.0.1"),
-    "port": int(os.getenv("DB_PORT", 3306)),
-    "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
-    "database": os.getenv("DB_NAME", "miapp"),
-}
-
-pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=5, **DB_CONFIG)
->>>>>>> 792a954d18a029d45d707dc8ca638f1b36e1a392
 
 def get_db():
     return pool.get_connection()
