@@ -18,7 +18,7 @@ DB_CONFIG = {
 }
 
 # Creamos el pool con pool_size=2 para no exceder el límite de Clever Cloud
-pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=2, **DB_CONFIG)
+pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=1, **DB_CONFIG)
 
 def get_db():
     return pool.get_connection()
