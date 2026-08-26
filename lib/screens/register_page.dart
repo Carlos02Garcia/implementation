@@ -122,7 +122,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               setState(() => _isLoading = false);
                               return;
                             }
-                            final service = AuthService(baseUrl: 'http://10.0.2.2:8000');
+                            final service = AuthService(baseUrl: 'https://implementation-production.up.railway.app');
                             try {
                               final resp = await service.register(email, p).timeout(const Duration(seconds: 10));
                               if (!mounted) return;
