@@ -1,6 +1,10 @@
 import os
 import smtplib
 from email.message import EmailMessage
+import logging
+
+# Configura el logger (para que los mensajes aparezcan en Railway)
+logger = logging.getLogger(__name__)
 
 def send_otp_email(to_email: str, code: str) -> bool:
     """Envía un OTP por correo. Si no hay configuración válida, no falla y devuelve False.
@@ -16,11 +20,17 @@ def send_otp_email(to_email: str, code: str) -> bool:
     password = os.getenv("EMAIL_PASS")
     sender = os.getenv("EMAIL_FROM", user or "no-reply@example.com")
 
+    # Logs para depuración
+    logger.info(f"EMAIL_ENABLED: {enabled}")
+    logger.info(f"EMAIL_USER: {user}")
+    logger.info(f"EMAIL_PASS: {'OK' if password else 'FALTA'}")
+    logger.info(f"EMAIL_HOST: {host}, EMAIL_PORT: {port}")
+
     if not enabled:
-        # Envío deshabilitado para entorno de pruebas
+        logger.warning("EMAIL_ENABLED no está activado")
         return False
     if not user or not password:
-        # Configuración incompleta: no intentar enviar
+        logger.error("EMAIL_USER o EMAIL_PASS no están configurados")
         return False
 
     try:
@@ -33,7 +43,16 @@ def send_otp_email(to_email: str, code: str) -> bool:
         with smtplib.SMTP_SSL(host, port) as smtp:
             smtp.login(user, password)
             smtp.send_message(msg)
+        
+        logger.info(f"✅ Correo enviado exitosamente a {to_email}")
         return True
-    except Exception:
-        # No propagamos errores de SMTP para no romper el flujo
+
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"❌ Error de autenticación: {e}. Revisa EMAIL_USER y EMAIL_PASS.")
+        return False
+    except smtplib.SMTPException as e:
+        logger.error(f"❌ Error SMTP: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"❌ Error inesperado: {e}")
         return False
