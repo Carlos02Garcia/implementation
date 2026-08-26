@@ -1,5 +1,10 @@
 -- Schema para la base de datos 'miapp'
+<<<<<<< HEAD
 USE b88sz46vbki4xwgfjyv7;
+=======
+CREATE DATABASE IF NOT EXISTS miapp;
+USE miapp;
+>>>>>>> 792a954d18a029d45d707dc8ca638f1b36e1a392
 
 -- Tabla de usuarios
 CREATE TABLE IF NOT EXISTS users (
@@ -10,7 +15,11 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Índice adicional sobre email (ya cubierto por UNIQUE, opcional)
+<<<<<<< HEAD
 CREATE INDEX idx_users_email ON users(email);
+=======
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+>>>>>>> 792a954d18a029d45d707dc8ca638f1b36e1a392
 
 -- Tabla de códigos OTP para verificación de login
 CREATE TABLE IF NOT EXISTS otp_codes (
