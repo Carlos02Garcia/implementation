@@ -1,50 +1,46 @@
-import os
-import smtplib
-from email.message import EmailMessage
 import logging
+import os
+
+import resend
+
 
 logger = logging.getLogger(__name__)
 
-def send_otp_email(to_email: str, code: str) -> bool:
-    enabled = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
-    host = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-    port = int(os.getenv("EMAIL_PORT", "465"))
-    user = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASS")
-    sender = os.getenv("EMAIL_FROM", user or "no-reply@example.com")
 
-    logger.info(f"EMAIL_ENABLED: {enabled}")
-    logger.info(f"EMAIL_USER: {user}")
-    logger.info(f"EMAIL_PASS: {'OK' if password else 'FALTA'}")
-    logger.info(f"EMAIL_HOST: {host}, EMAIL_PORT: {port}")
+def send_otp_email(to_email: str, code: str) -> bool:
+    """Envía un OTP mediante la API HTTPS de Resend."""
+    enabled = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
+    api_key = os.getenv("RESEND_API_KEY")
+    sender = os.getenv("EMAIL_FROM")
 
     if not enabled:
         logger.warning("EMAIL_ENABLED no está activado")
         return False
-    if not user or not password:
-        logger.error("EMAIL_USER o EMAIL_PASS no están configurados")
+    if not api_key:
+        logger.error("RESEND_API_KEY no está configurada")
+        return False
+    if not sender:
+        logger.error("EMAIL_FROM no está configurado")
         return False
 
     try:
-        msg = EmailMessage()
-        msg.set_content(f"Tu código de verificación es: {code}")
-        msg["Subject"] = "Código de inicio de sesión"
-        msg["From"] = sender
-        msg["To"] = to_email
-
-        with smtplib.SMTP_SSL(host, port) as smtp:
-            smtp.login(user, password)
-            smtp.send_message(msg)
-
-        logger.info(f"✅ Correo enviado exitosamente a {to_email} con código {code}")
+        resend.api_key = api_key
+        response = resend.Emails.send(
+            {
+                "from": sender,
+                "to": [to_email],
+                "subject": "Código de inicio de sesión",
+                "text": f"Tu código de verificación es: {code}",
+                "html": (
+                    "<p>Tu código de verificación es:</p>"
+                    f"<p><strong style=\"font-size: 24px; letter-spacing: 4px;\">{code}</strong></p>"
+                    "<p>Este código vence en 5 minutos.</p>"
+                ),
+            }
+        )
+        email_id = response.get("id") if isinstance(response, dict) else None
+        logger.info("Correo OTP aceptado por Resend para %s (id: %s)", to_email, email_id)
         return True
-
-    except smtplib.SMTPAuthenticationError as e:
-        logger.error(f"❌ Error de autenticación: {e}. Revisa EMAIL_USER y EMAIL_PASS.")
-        return False
-    except smtplib.SMTPException as e:
-        logger.error(f"❌ Error SMTP: {e}")
-        return False
-    except Exception as e:
-        logger.error(f"❌ Error inesperado: {e}")
+    except Exception:
+        logger.exception("Resend no pudo enviar el OTP a %s", to_email)
         return False

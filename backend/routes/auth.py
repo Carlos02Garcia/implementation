@@ -110,9 +110,11 @@ def login_step1(data: LoginStep1Request):
     # Enviar el OTP por correo (AHORA usa send_otp_email directamente)
     success = send_otp_email(data.email, code)   # <--- CAMBIO AQUÍ
     if not success:
-        logger.error(f"❌ Falló el envío de OTP a {data.email}")
-        # Podrías devolver un 500 o seguir adelante, depende de tu lógica
-        # raise HTTPException(status_code=500, detail="Error al enviar el código")
+        logger.error("Falló el envío de OTP a %s", data.email)
+        raise HTTPException(
+            status_code=503,
+            detail="No fue posible enviar el código. Intenta de nuevo.",
+        )
     
     return {"message": "Código OTP enviado a tu correo"}
 
@@ -173,8 +175,10 @@ def resend_otp(data: ResendOtpRequest):
     # 4. Enviar el nuevo OTP por correo (AHORA usa send_otp_email directamente)
     success = send_otp_email(data.email, new_code)   # <--- CAMBIO AQUÍ
     if not success:
-        logger.error(f"❌ Falló el reenvío de OTP a {data.email}")
-        # Puedes decidir si devolver error o solo un warning
-        # raise HTTPException(status_code=500, detail="Error al reenviar el código")
+        logger.error("Falló el reenvío de OTP a %s", data.email)
+        raise HTTPException(
+            status_code=503,
+            detail="No fue posible reenviar el código. Intenta de nuevo.",
+        )
     
     return {"message": "Nuevo código OTP enviado a tu correo"}

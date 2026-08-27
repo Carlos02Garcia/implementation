@@ -29,10 +29,8 @@ def login_step1(payload: LoginRequest):
 
     code = generate_otp()
     save_otp(payload.email, code, datetime.now() + timedelta(minutes=5))
-    # Enviar OTP solo si está habilitado y configurado; no bloquear ante fallos
-    email_enabled = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
-    if email_enabled:
-        send_otp_email(payload.email, code)
+    if not send_otp_email(payload.email, code):
+        raise HTTPException(503, "No fue posible enviar el código. Intenta de nuevo.")
 
     return {"message": "OTP enviado"}
 
@@ -55,8 +53,7 @@ def resend_otp(payload: ResendOtpRequest):
     code = generate_otp()
     save_otp(payload.email, code, datetime.now() + timedelta(minutes=5))
 
-    email_enabled = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
-    if email_enabled:
-        send_otp_email(payload.email, code)
+    if not send_otp_email(payload.email, code):
+        raise HTTPException(503, "No fue posible reenviar el código. Intenta de nuevo.")
 
     return {"message": "OTP reenviado"}
