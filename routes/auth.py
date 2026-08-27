@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 
 from backend.db import get_user_by_email, create_user
 from models.schemas import RegisterRequest, LoginRequest, VerifyOtpRequest, ResendOtpRequest
-from services.otp_service import generate_otp, save_otp, validate_otp
-from services.email_service import send_otp_email
+from backend.services.otp_service import generate_otp, save_otp, validate_otp
+from backend.email_service import send_otp_email
 import os
-from services.jwt_services import create_access_token
+from backend.services.jwt_services import create_access_token
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from passlib.hash import bcrypt
 import db
-from services.email_service import send_otp_email   # <--- CAMBIA ESTO
+from email_service import send_otp_email
 import random
 import datetime
 import logging
@@ -43,7 +43,7 @@ def register(data: RegisterRequest):
 from pydantic import BaseModel, EmailStr
 from passlib.hash import bcrypt
 import db
-from services.email_service import send_otp_email  # <--- CAMBIO IMPORTANTE
+from backend.email_service import send_otp_email  # <--- CAMBIO IMPORTANTE
 import random
 import datetime
 import logging

@@ -6,11 +6,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 def send_otp_email(to_email: str, code: str) -> bool:
-    """
-    Envía un OTP por correo usando Gmail.
-    Variables necesarias: EMAIL_ENABLED, EMAIL_HOST, EMAIL_PORT,
-    EMAIL_USER, EMAIL_PASS, EMAIL_FROM
-    """
     enabled = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
     host = os.getenv("EMAIL_HOST", "smtp.gmail.com")
     port = int(os.getenv("EMAIL_PORT", "465"))
@@ -18,7 +13,6 @@ def send_otp_email(to_email: str, code: str) -> bool:
     password = os.getenv("EMAIL_PASS")
     sender = os.getenv("EMAIL_FROM", user or "no-reply@example.com")
 
-    # Logs de depuración
     logger.info(f"EMAIL_ENABLED: {enabled}")
     logger.info(f"EMAIL_USER: {user}")
     logger.info(f"EMAIL_PASS: {'OK' if password else 'FALTA'}")
