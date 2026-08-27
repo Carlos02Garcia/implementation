@@ -43,7 +43,7 @@ def register(data: RegisterRequest):
 from pydantic import BaseModel, EmailStr
 from passlib.hash import bcrypt
 import db
-from backend.email_service import send_otp_email  # <--- CAMBIO IMPORTANTE
+from email_service import send_otp_email 
 import random
 import datetime
 import logging
